@@ -1,0 +1,5 @@
+#!/bin/sh
+
+
+[ ! -d mysql ] && mkdir mysql;
+[ ! -d src ] && mkdir src;

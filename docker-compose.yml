@@ -1,0 +1,56 @@
+version: '3'
+services:
+    nginx:
+        image: nginx:latest
+        ports:
+            - "80:80"
+        volumes:
+            - ./src:/var/www/html
+            - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - php
+            - mysql
+        networks:
+            - server
+        container_name: nginx
+
+    mysql:
+        image: mysql
+        command: --default-authentication-plugin=mysql_native_password
+        restart: always
+        environment:
+            - MYSQL_ROOT_PASSWORD=root
+            - MYSQL_DATABASE=blog
+        ports:
+            - "3306:3306"
+        networks:
+            - server
+        volumes:
+            - ./mysql:/var/lib/mysql
+        container_name: mysql
+    php:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        volumes:
+            - ./src:/var/www/html
+        ports:
+            - "9000:9000"
+        networks:
+            - server
+        container_name: php
+
+    composer:
+        image: composer
+        volumes:
+            - ./src:/var/www/html
+        working_dir: /var/www/html
+        depends_on:
+            - php
+        networks:
+            - server
+        command: composer install -v
+        container_name: composer
+networks:
+    server:
+        driver: bridge
