@@ -1,0 +1,46 @@
+#!/bin/sh
+
+ERRORS=0
+
+clone_laravel () {
+    if [ ! -d src/public ]; then
+        cd src
+        git clone https://github.com/laravel/laravel.git .
+        if [ $? != 0 ]; then
+            cd ..
+            clone_laravel
+        else
+            echo 'Renaming .env.example to .env'
+            mv .env.example .env
+            echo 'Modifying .env file'
+            sed -i -e "s/APP_URL=.*/APP_URL=http:\/\/nginx/g
+                       s/DB_HOST=.*/DB_HOST=mysql/g
+                       s/DB_DATABASE=.*/DB_DATABASE=$db_database/g
+                       s/DB_PASSWORD=.*/DB_PASSWORD=$db_pass/g" .env
+            echo 'Changing storage folder permissions'
+            chmod -R 777 storage
+            echo 'Done'
+        fi
+    fi
+}
+
+[ ! -d mysql ] && mkdir mysql;
+[ ! -d src ] && mkdir src;
+
+
+if [ ! -e .env ]; then
+    echo 'Can not find .env file'
+    echo 'Creating new .env file'
+    read -p "New password for database: " db_pass
+    read -p "New database name: " db_database
+    printf "DB_DATABASE=${db_database}\nDB_PASSWORD=${db_pass}\n" > .env
+    echo ''
+fi
+clone_laravel
+echo '============================================================'
+echo ''
+echo 'DO NOT EXIT CONTAINER UNTILL COMPOSER STOPS WITH EXIT CODE 0'
+echo ''
+echo '============================================================'
+sleep 3s
+exec docker-compose up --build

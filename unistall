@@ -1,0 +1,7 @@
+#!/bin/sh
+
+echo 'Removing files...'
+sudo rm -rf mysql src .env
+docker rm $(docker ps -qa)
+docker rmi $(docker images -qa) -f
+echo 'Done.'
